@@ -14,6 +14,7 @@
 #include <vector>
 #include <chrono>
 #include <fstream>
+#include <forward_list>
 #include <algorithm>
 #include <random>
 using namespace std;
@@ -27,7 +28,6 @@ private:
 public:
   int tag;
   bool marked = false;
-  Present* nextPresent;
 
   Present(int value)
   {
@@ -51,7 +51,7 @@ mutex chainLock2;
 class PresentChain
 {
 private:
-  Present* head;
+  forward_list<Present*> presentChain;
 
   bool validate(Present* pred, Present* curr)
   {
@@ -59,11 +59,6 @@ private:
   }
 
 public:
-  PresentChain()
-  {
-    head->tag = INT_MIN;
-    head->nextPresent = NULL;
-  }
 
   bool add(int presentTag)
   {
@@ -71,7 +66,7 @@ public:
 
     while(true)
     {
-      Present* pred = head;
+      Present* pred = presentChain.front();
       Present* curr = pred->nextPresent;
 
       while(curr->tag < key)

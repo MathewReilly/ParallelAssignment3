@@ -24,10 +24,11 @@ class Present
 {
 private:
   mutex presentLock;
+  bool isLocked = false;
 public:
-  int tag;
+  int tag = -1;
   bool marked = false;
-  Present* nextPresent;
+  Present* nextPresent = NULL;
 
   Present(int value)
   {
@@ -36,11 +37,19 @@ public:
 
   void lock()
   {
-    presentLock.lock();
+    //cout << "enters lock method" << endl;
+    if(presentLock.try_lock())
+    {
+      isLocked = true;
+      return;
+    } 
+    while(isLocked)
+    {}
   }
 
   void unlock()
   {
+    isLocked = false;
     presentLock.unlock();
   }
 };
@@ -62,7 +71,7 @@ public:
   PresentChain()
   {
     head->tag = INT_MIN;
-    head->nextPresent = NULL;
+    head->nextPresent = new Present(INT_MAX);
   }
 
   bool add(int presentTag)
@@ -80,23 +89,32 @@ public:
         curr = curr->nextPresent;
       }
 
+      //cout << "Makes it to lock 1" << endl;
       pred->lock();
+      //cout << "Locks pred 1" << endl;
       curr->lock();
       if(validate(pred, curr))
       {
         if(curr->tag == key)
         {
+          //cout << "Validate fails" << endl;
+          curr->unlock();
+          pred->unlock();
           return false;
         } else
         {
           Present* insertPresent = new Present(key);
           insertPresent->nextPresent = curr;
           pred->nextPresent = insertPresent;
+          curr->unlock();
+          pred->unlock();
           return true;
         }
       }
       curr->unlock();
+      //cout << "SUCCESS" << endl;
       pred->unlock();
+      //cout << "Survives lock cycle 1" << endl;
     }
   }
 
@@ -115,6 +133,8 @@ public:
         curr = curr->nextPresent;
       }
 
+      cout << "Makes it to lock 2" << endl;
+
       pred->lock();
       curr->lock();
       if(validate(pred, curr))
@@ -131,6 +151,8 @@ public:
       }
       curr->unlock();
       pred->unlock();
+      //cout << "SUCCESS" << endl;
+      cout << "Survives lock cycle 2" << endl;
     }
   }
 
@@ -186,9 +208,10 @@ void servant(PresentChain* presentChain)
 
   while(!presentBag.empty())
   {
-    randOption = (rand() % 4);
+    //randOption = (rand() % 4);
+    randOption = 1;
 
-    cout << "rand option: " << randOption << endl;
+    //cout << "rand option: " << randOption << endl;
 
     switch(randOption)
     {
@@ -196,9 +219,12 @@ void servant(PresentChain* presentChain)
         takePresentLock.lock();
         randPresentFromBag = presentBag.back();
         presentBag.pop_back();
+        cout << presentBag.size() << endl;
         takePresentLock.unlock();
 
         presentChain->add(randPresentFromBag);
+
+        cout << "is passing add" << endl;
 
         presentTagLock.lock();
         thankYouTags.push_back(randPresentFromBag);
@@ -217,7 +243,7 @@ void servant(PresentChain* presentChain)
         // write to file???
         randPresent = (rand() % 500000) + 1;
         presentChain->contains(randPresent);
-        cout << "does not fail here" << endl;
+        // cout << "does not fail here" << endl;
         break;
       default:
         break;
@@ -230,7 +256,7 @@ int main()
 {
   PresentChain presentChain;
   
-  fillPresentBag(1000);
+  fillPresentBag(10);
   // showShuffle();
 
   // array to hold all of the threads
