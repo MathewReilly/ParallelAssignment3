@@ -18,8 +18,8 @@
 #include <random>
 using namespace std;
 
-// ASSUMING IT IS SOME PROBLEM WITH THE ABSENCE OF TRY - FINALLY BLOCKS - CONSIDER RAII
 
+// holds information on present node and lock
 class Present
 {
 private:
@@ -57,6 +57,7 @@ public:
 mutex chainLock1;
 mutex chainLock2;
 
+// attemps to support lazy linked lists functions
 class PresentChain
 {
 private:
@@ -173,6 +174,7 @@ vector<int> thankYouTags;
 mutex takePresentLock;
 mutex presentTagLock;
 
+// Supporting functions
 void fillPresentBag(int presentCount)
 {
   for(int i = 1; i < presentCount + 1; i++)
@@ -196,7 +198,7 @@ void showShuffle()
   cout << endl;
 }
 
-
+// multithreaded method for minutoar servents
 void servant(PresentChain* presentChain)
 {
   int randOption = 0;

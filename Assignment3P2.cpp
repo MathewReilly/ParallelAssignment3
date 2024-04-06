@@ -14,9 +14,10 @@
 #include <condition_variable>
 #include <fstream>
 #include <random>
+#include <cmath>
 using namespace std;
 const int THREAD_NUM = 8;
-const int MINUTES_NUM = 10000;
+const int MINUTES_NUM = 24000;
 
 //convert to bounded queue if time
 
@@ -76,12 +77,12 @@ void sensor(int minutesToSimulate)
     // wait for all threads to be at the end
     if(threadTracker == THREAD_NUM)
     {
-      threadTracker = 0;
-      threadsSynced = true;
       nextIterationLock.lock();
       threadsEscaped++;
       timer++;
+      threadTracker = 0;
       nextIterationLock.unlock();
+      threadsSynced = true;
       
     } else
     {
@@ -137,12 +138,44 @@ int main()
     cout << endl;
   }*/
 
+
+  int curMin = INT_MAX;
+  int curMinInterval = 0;
+  int curMax = INT_MIN;
+  int curMaxInterval = 0;
+  int curDifInInterval = 0;
+
   int hours = 0;
   int entriesSize = 0;
 
-
   for(int i = 0; i < recordedTimes.size(); i++)
   {
+    for(int j = 0; j < recordedTimes[i].size(); j++)
+    {
+      hourData.push_back(recordedTimes[i][j]);
+
+      if(curMin > hourData[j])
+      {
+        curMin = hourData[j];
+        curMinInterval = i;
+        if(abs(curMinInterval - curMaxInterval) <= 10)
+        {
+          curDifInInterval = curMax - curMin;
+        }
+      }
+
+      if(curMax < hourData[j])
+      {
+        curMax = hourData[j];
+        curMaxInterval = i;
+        if(abs(curMinInterval - curMaxInterval) <= 10)
+        {
+          curDifInInterval = curMax - curMin;
+        }
+      }
+
+    }
+
     if(i % 60 == 0 && i > 0)
     {
       hours++;
@@ -151,13 +184,14 @@ int main()
       cout << "Hour: " << hours << endl;
       cout << "    Lowest 5 Temps: " << hourData[0] << " " << hourData[1] << " " << hourData[2] << " " << hourData[3] << " " << hourData[4] << endl;
       cout << "    Highest 5 Temps: " << hourData[entriesSize - 5] << " " << hourData[entriesSize - 4] << " " << hourData[entriesSize - 3] << " " << hourData[entriesSize - 2] << " " << hourData[entriesSize - 1] << endl;
+      cout << "    The largest temp difference was between " << curMaxInterval << "minute and " << curMinInterval << "minute at " << curDifInInterval << "F." << endl;
 
+      curMin = INT_MAX;
+      curMinInterval = i;
+      curMax = INT_MIN;
+      curMaxInterval = i;
+      curDifInInterval = 0;
       hourData.clear();
-    }
-
-    for(int j = 0; j < recordedTimes[i].size(); j++)
-    {
-      hourData.push_back(recordedTimes[i][j]);
     }
   }
 
