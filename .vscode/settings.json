@@ -2,6 +2,8 @@
   "files.associations": {
     "__mutex_base": "cpp",
     "vector": "cpp",
-    "iostream": "cpp"
+    "iostream": "cpp",
+    "ostream": "cpp",
+    "chrono": "cpp"
   }
 }

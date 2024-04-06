@@ -26,7 +26,7 @@ private:
   mutex presentLock;
   bool isLocked = false;
 public:
-  int tag = -1;
+  int tag = INT_MAX;
   bool marked = false;
   Present* nextPresent = NULL;
 
@@ -40,16 +40,16 @@ public:
     //cout << "enters lock method" << endl;
     if(presentLock.try_lock())
     {
-      isLocked = true;
+      //isLocked = true;
       return;
     } 
-    while(isLocked)
-    {}
+    //while(isLocked)
+   //{}
   }
 
   void unlock()
   {
-    isLocked = false;
+    //isLocked = false;
     presentLock.unlock();
   }
 };
@@ -97,7 +97,6 @@ public:
       {
         if(curr->tag == key)
         {
-          //cout << "Validate fails" << endl;
           curr->unlock();
           pred->unlock();
           return false;
@@ -111,8 +110,8 @@ public:
           return true;
         }
       }
+      cout << "Validate fails" << endl;
       curr->unlock();
-      //cout << "SUCCESS" << endl;
       pred->unlock();
       //cout << "Survives lock cycle 1" << endl;
     }
